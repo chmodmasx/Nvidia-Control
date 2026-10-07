@@ -22,7 +22,7 @@ impl NvmlBackend {
 
     fn device_by_id(&self, id: &GpuId) -> Result<Device<'_>, ControlError> {
         self.nvml
-            .device_by_uuid(&id.uuid)
+            .device_by_uuid(id.uuid.as_str())
             .map_err(|error| match error {
                 NvmlError::NotFound | NvmlError::InvalidArg => {
                     ControlError::GpuNotFound(id.uuid.clone())
