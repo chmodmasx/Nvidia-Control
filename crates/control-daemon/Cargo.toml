@@ -1,0 +1,12 @@
+[package]
+name = "nvidia-control-daemon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+nvidia-control-core.workspace = true
+nvidia-control-backend-mock = { path = "../backend-mock" }
+serde.workspace = true
+serde_json.workspace = true
