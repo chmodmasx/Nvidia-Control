@@ -20,18 +20,25 @@ Exit condition: the mock backend can feed both daemon and UI without either depe
 
 ## M1 — Read-only NVIDIA hardware
 
-- [ ] NVML runtime detection
-- [ ] enumerate real NVIDIA GPUs
-- [ ] GPU UUID/name
-- [ ] driver version
-- [ ] temperature
-- [ ] GPU/memory utilization
-- [ ] VRAM usage
-- [ ] graphics/memory clocks
-- [ ] power telemetry
-- [ ] fan telemetry where available
-- [ ] capability probing
+Status: **in progress**
+
+- [x] NVML runtime detection
+- [x] enumerate real NVIDIA GPUs
+- [x] GPU UUID/name
+- [x] driver version
+- [x] VBIOS version when exposed by NVML
+- [x] temperature
+- [x] GPU/memory utilization
+- [x] VRAM usage
+- [x] graphics/memory clocks
+- [x] power telemetry
+- [x] fan telemetry where available
+- [x] unsupported metrics degrade independently
+- [ ] hotspot temperature through extended NVIDIA APIs
+- [ ] VRAM junction temperature through extended NVIDIA APIs
+- [ ] richer capability probing
 - [ ] test on multiple driver generations
+- [ ] validate on physical NVIDIA hardware
 
 Exit condition: normal monitoring works on NVIDIA hardware without root and without `nvidia-smi` parsing.
 

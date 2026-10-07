@@ -8,7 +8,7 @@ Nvidia-Control aims to provide a modern, Wayland-first control application for N
 
 Early prototype / architecture bootstrap.
 
-The first milestone is intentionally small: prove the module boundaries and hardware capability model before adding privileged writes or a large GUI.
+The first real hardware backend is now present: NVML read-only telemetry. It dynamically loads NVIDIA's NVML library at runtime, so the project can still compile and be tested on CI machines without NVIDIA hardware.
 
 ## Design principles
 
@@ -19,7 +19,7 @@ The first milestone is intentionally small: prove the module boundaries and hard
 - **No shell-command architecture**: stable APIs such as NVML, Vulkan, D-Bus and compositor protocols are preferred. Command-line fallbacks are isolated behind adapters when unavoidable.
 - **Safe failure boundaries**: an experimental backend must be able to fail or be disabled without taking down the rest of the application.
 
-## Planned architecture
+## Architecture
 
 ```text
 Qt 6 / QML application
@@ -29,10 +29,9 @@ Qt 6 / QML application
 nvidia-control-daemon
         |
         +-- control-core
-        +-- control-ipc
-        +-- backend-nvml
-        +-- backend-nvapi        (experimental)
-        +-- backend-nvkms        (experimental)
+        +-- backend-nvml        (read-only hardware path)
+        +-- backend-nvapi       (experimental)
+        +-- backend-nvkms       (experimental)
         +-- backend-display
         +-- backend-proton
         +-- backend-capture
@@ -41,17 +40,25 @@ nvidia-control-daemon
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module contracts and [docs/ROADMAP.md](docs/ROADMAP.md) for staged implementation.
 
-## Initial target
+## Current prototype
 
-The first functional target is read-only and safe:
+On a machine with the proprietary NVIDIA driver/NVML installed:
 
-1. Detect NVIDIA GPUs.
-2. Read capabilities and telemetry through NVML.
-3. Expose a stable internal model.
-4. Make the daemon/UI boundary work.
-5. Add write operations only after the read path is tested.
+```bash
+cargo run -p nvidia-control-daemon
+```
 
-Later milestones add power limits, clocks, fan curves, V/F control, display features, Proton/DLSS overrides, Reflex, Smooth Motion where supported, capture/Instant Replay and distribution-native driver management.
+The default backend is `nvml`. The command enumerates NVIDIA GPUs and prints a JSON report containing the stable device identity and the telemetry NVML exposes, including GPU temperature, GPU/memory utilization, VRAM usage, clocks, power draw and fan speed when available.
+
+Metrics unsupported by a particular card/driver are represented as `null` instead of taking down the complete telemetry snapshot.
+
+For development without NVIDIA hardware:
+
+```bash
+NVIDIA_CONTROL_BACKEND=mock cargo run -p nvidia-control-daemon
+```
+
+The next steps are physical-hardware validation, richer capability probing, stable daemon/UI IPC and the Qt/QML shell.
 
 ## License
 
