@@ -160,10 +160,13 @@ The UI must never infer support from a GPU marketing name alone.
 
 Each feature reports an access level:
 
-- `unsupported`
+- `unknown`: feature availability has not been established by the active backends (default)
+- `unsupported`: confirmed unavailable by relevant capability checks
 - `read_only`
 - `read_write`
 - `experimental_read_write`
+
+Reading a setting through NVML **does not prove write access**. In the current read-only backend, a successful getter reports `read_only`. An unsuccessful getter remains `unknown` because another backend, driver revision or permission context might still provide the feature. Do not promote capabilities to writable based on card model or a successful read.
 
 The final capability is computed from the complete environment where relevant:
 
@@ -198,4 +201,4 @@ The current prototype intentionally implements only:
 3. a deterministic mock backend;
 4. a small executable that enumerates a device and reads telemetry.
 
-The next implementation step is a read-only NVML backend. Privileged writes come later.
+NVML read-only telemetry has now been validated on a physical RTX 3090 with driver 610.57.04. Read access to power-limit settings and graphics clocks is dynamically probed. Privileged writes come later.

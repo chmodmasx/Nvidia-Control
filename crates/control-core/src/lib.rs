@@ -10,6 +10,8 @@ pub struct GpuId {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AccessLevel {
+    /// The active backends have not established whether this feature is available.
+    Unknown,
     Unsupported,
     ReadOnly,
     ReadWrite,
@@ -18,7 +20,10 @@ pub enum AccessLevel {
 
 impl AccessLevel {
     pub const fn is_available(self) -> bool {
-        !matches!(self, Self::Unsupported)
+        matches!(
+            self,
+            Self::ReadOnly | Self::ReadWrite | Self::ExperimentalReadWrite
+        )
     }
 
     pub const fn can_write(self) -> bool {
@@ -42,15 +47,15 @@ pub struct CapabilitySet {
 impl Default for CapabilitySet {
     fn default() -> Self {
         Self {
-            telemetry: AccessLevel::Unsupported,
-            power_limit: AccessLevel::Unsupported,
-            clocks: AccessLevel::Unsupported,
-            fan_control: AccessLevel::Unsupported,
-            voltage_frequency_curve: AccessLevel::Unsupported,
-            digital_vibrance: AccessLevel::Unsupported,
-            dlss_overrides: AccessLevel::Unsupported,
-            reflex: AccessLevel::Unsupported,
-            smooth_motion: AccessLevel::Unsupported,
+            telemetry: AccessLevel::Unknown,
+            power_limit: AccessLevel::Unknown,
+            clocks: AccessLevel::Unknown,
+            fan_control: AccessLevel::Unknown,
+            voltage_frequency_curve: AccessLevel::Unknown,
+            digital_vibrance: AccessLevel::Unknown,
+            dlss_overrides: AccessLevel::Unknown,
+            reflex: AccessLevel::Unknown,
+            smooth_motion: AccessLevel::Unknown,
         }
     }
 }
@@ -113,8 +118,16 @@ mod tests {
     }
 
     #[test]
+    fn unknown_is_serialized_as_unknown() {
+        let json = serde_json::to_string(&AccessLevel::Unknown).expect("serialize unknown");
+        assert_eq!(json, "\"unknown\"");
+    }
+
+    #[test]
     fn unsupported_access_is_not_available() {
         assert!(!AccessLevel::Unsupported.is_available());
+        assert!(!AccessLevel::Unknown.is_available());
+        assert!(!AccessLevel::Unknown.can_write());
         assert!(AccessLevel::ReadOnly.is_available());
     }
 }

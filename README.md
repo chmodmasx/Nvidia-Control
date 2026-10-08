@@ -58,7 +58,18 @@ For development without NVIDIA hardware:
 NVIDIA_CONTROL_BACKEND=mock cargo run -p nvidia-control-daemon
 ```
 
-The next steps are physical-hardware validation, richer capability probing, stable daemon/UI IPC and the Qt/QML shell.
+Read-only telemetry has been validated on physical hardware: RTX 3090 with NVIDIA driver 610.57.04. Cross-generation testing remains open. Unique hardware identifiers from the validation machine are not stored in this repository.
+
+Capability semantics:
+
+- `unknown` (default): the active backends have **not proven** feature availability. This does not imply incompatible hardware.
+- `unsupported`: confirmed unsupported after appropriate checks.
+- `read_only`: the corresponding getter succeeded; the application has **not** implemented or authorized changes.
+- `read_write`: reserved for a future implemented and verified write operation.
+
+NVML now checks read access to power-limit settings and graphics clocks. Fan control, V/F, compositor and gaming feature capabilities remain unknown until their adapters verify them. `memory_util_percent` is memory-controller activity, not percent of VRAM occupied.
+
+The next steps are expanded capability probing, stable daemon/UI IPC and the Qt/QML shell.
 
 ## License
 

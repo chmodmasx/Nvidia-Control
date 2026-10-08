@@ -36,9 +36,11 @@ Status: **in progress**
 - [x] unsupported metrics degrade independently
 - [ ] hotspot temperature through extended NVIDIA APIs
 - [ ] VRAM junction temperature through extended NVIDIA APIs
-- [ ] richer capability probing
+- [x] initial dynamic NVML read-access probes (power limit and clocks)
+- [ ] full multi-backend capability probing
 - [ ] test on multiple driver generations
-- [ ] validate on physical NVIDIA hardware
+- [x] validate NVML read-only telemetry on physical NVIDIA hardware (RTX 3090, driver 610.57.04)
+- [ ] validate other GPU families
 
 Exit condition: normal monitoring works on NVIDIA hardware without root and without `nvidia-smi` parsing.
 

@@ -55,6 +55,10 @@ impl NvmlBackend {
             vbios_version: optional_metric(device.vbios_version())?,
             capabilities: CapabilitySet {
                 telemetry: AccessLevel::ReadOnly,
+                // A successful getter establishes read access, not write permission.
+                power_limit: probe_read_access(device.power_management_limit()),
+                clocks: probe_read_access(device.clock_info(Clock::Graphics)),
+                // Fan telemetry cannot establish that fan control is writable.
                 ..CapabilitySet::default()
             },
         })
@@ -152,12 +156,41 @@ fn optional_metric<T>(result: Result<T, NvmlError>) -> Result<Option<T>, Control
     }
 }
 
+/// A failed getter is not enough to classify the whole feature as unsupported:
+/// another backend or permission context may expose it.
+fn probe_read_access<T>(result: Result<T, NvmlError>) -> AccessLevel {
+    if result.is_ok() {
+        AccessLevel::ReadOnly
+    } else {
+        AccessLevel::Unknown
+    }
+}
+
 fn nvml_error(operation: &str, error: NvmlError) -> ControlError {
     ControlError::Backend(format!("NVML could not {operation}: {error}"))
 }
 
 #[cfg(test)]
 mod tests {
+    use super::{probe_read_access, AccessLevel, NvmlError};
+
+    #[test]
+    fn successful_probe_reports_read_only() {
+        assert_eq!(probe_read_access(Ok(250_000u32)), AccessLevel::ReadOnly);
+    }
+
+    #[test]
+    fn unsuccessful_probes_remain_unknown() {
+        assert_eq!(
+            probe_read_access::<u32>(Err(NvmlError::NotSupported)),
+            AccessLevel::Unknown
+        );
+        assert_eq!(
+            probe_read_access::<u32>(Err(NvmlError::NoPermission)),
+            AccessLevel::Unknown
+        );
+    }
+
     #[test]
     fn converts_milliwatts_without_integer_truncation() {
         let milliwatts = 318_500u32;
