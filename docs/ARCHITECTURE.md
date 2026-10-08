@@ -62,6 +62,9 @@ Responsibilities:
 - VRAM usage
 - clocks
 - power telemetry
+- read-only power-limit constraints (current, default, enforced and allowed range)
+- maximum clocks and legacy application-clock combinations (read-only diagnostics)
+- fan setpoint range when the driver exposes it
 - supported stable tuning operations
 
 Writes must be added one operation at a time and guarded by explicit capabilities.
@@ -201,4 +204,4 @@ The current prototype intentionally implements only:
 3. a deterministic mock backend;
 4. a small executable that enumerates a device and reads telemetry.
 
-NVML read-only telemetry has now been validated on a physical RTX 3090 with driver 610.57.04. Read access to power-limit settings and graphics clocks is dynamically probed. Privileged writes come later.
+NVML read-only telemetry has now been validated on a physical RTX 3090 with driver 610.57.04. Read access to power-limit settings and graphics clocks is dynamically probed. A separate `GpuOperatingLimits` snapshot exposes power constraints, max clocks, optional legacy application-clock tables and fan ranges. These readings do not imply permission to write. Privileged writes come later.

@@ -84,6 +84,43 @@ pub struct TelemetrySnapshot {
     pub fan_percent: Option<f32>,
 }
 
+/// Read-only device constraints and the supported legacy application-clock table.
+/// This is separate from rapidly changing telemetry and implies no write permission.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct GpuOperatingLimits {
+    pub power: PowerLimitInfo,
+    pub clocks: ClockLimitInfo,
+    pub fans: FanLimitInfo,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct PowerLimitInfo {
+    pub current_watts: Option<f32>,
+    pub default_watts: Option<f32>,
+    pub enforced_watts: Option<f32>,
+    pub min_watts: Option<f32>,
+    pub max_watts: Option<f32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct ClockLimitInfo {
+    pub max_graphics_mhz: Option<u32>,
+    pub max_memory_mhz: Option<u32>,
+    /// Legacy application-clock memory settings: not a guarantee of write support.
+    pub supported_application_memory_mhz: Option<Vec<u32>>,
+    /// Which memory frequency was used for the graphics-clock query below.
+    pub graphics_clocks_for_memory_mhz: Option<u32>,
+    /// Possible legacy application graphics-clock settings for that memory clock.
+    pub supported_application_graphics_mhz: Option<Vec<u32>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
+pub struct FanLimitInfo {
+    /// Readable requested fan-speed range; not confirmation of write privileges.
+    pub min_percent: Option<u32>,
+    pub max_percent: Option<u32>,
+}
+
 #[derive(Debug, Error)]
 pub enum ControlError {
     #[error("backend is unavailable: {0}")]
@@ -105,11 +142,21 @@ pub trait GpuBackend: Send + Sync {
     fn enumerate(&self) -> Result<Vec<GpuDevice>, ControlError>;
 
     fn telemetry(&self, id: &GpuId) -> Result<TelemetrySnapshot, ControlError>;
+
+    fn operating_limits(&self, id: &GpuId) -> Result<GpuOperatingLimits, ControlError>;
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unavailable_limit_readings_serialize_as_null() {
+        let json = serde_json::to_value(GpuOperatingLimits::default()).expect("serialize limits");
+        assert!(json["power"]["min_watts"].is_null());
+        assert!(json["clocks"]["supported_application_memory_mhz"].is_null());
+        assert!(json["fans"]["max_percent"].is_null());
+    }
 
     #[test]
     fn experimental_access_is_writable() {

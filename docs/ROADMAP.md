@@ -37,6 +37,10 @@ Status: **in progress**
 - [ ] hotspot temperature through extended NVIDIA APIs
 - [ ] VRAM junction temperature through extended NVIDIA APIs
 - [x] initial dynamic NVML read-access probes (power limit and clocks)
+- [x] read current/default/enforced/min/max power limits
+- [x] read maximum graphics/memory clocks
+- [x] read available legacy application memory clocks and graphics clocks for highest memory clock where supported
+- [x] read advertised fan-setpoint limits where supported
 - [ ] full multi-backend capability probing
 - [ ] test on multiple driver generations
 - [x] validate NVML read-only telemetry on physical NVIDIA hardware (RTX 3090, driver 610.57.04)

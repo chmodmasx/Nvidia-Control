@@ -1,6 +1,8 @@
 use nvidia_control_backend_mock::MockBackend;
 use nvidia_control_backend_nvml::NvmlBackend;
-use nvidia_control_core::{ControlError, GpuBackend, GpuDevice, TelemetrySnapshot};
+use nvidia_control_core::{
+    ControlError, GpuBackend, GpuDevice, GpuOperatingLimits, TelemetrySnapshot,
+};
 use serde::Serialize;
 use std::process::ExitCode;
 
@@ -9,6 +11,7 @@ struct DeviceReport {
     backend: &'static str,
     device: GpuDevice,
     telemetry: TelemetrySnapshot,
+    operating_limits: GpuOperatingLimits,
 }
 
 fn select_backend() -> Result<Box<dyn GpuBackend>, ControlError> {
@@ -30,10 +33,12 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     for device in backend.enumerate()? {
         let telemetry = backend.telemetry(&device.id)?;
+        let operating_limits = backend.operating_limits(&device.id)?;
         reports.push(DeviceReport {
             backend: backend_name,
             device,
             telemetry,
+            operating_limits,
         });
     }
 

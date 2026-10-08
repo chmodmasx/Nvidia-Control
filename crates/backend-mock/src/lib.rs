@@ -1,5 +1,6 @@
 use nvidia_control_core::{
-    AccessLevel, CapabilitySet, ControlError, GpuBackend, GpuDevice, GpuId, TelemetrySnapshot,
+    AccessLevel, CapabilitySet, ClockLimitInfo, ControlError, FanLimitInfo, GpuBackend, GpuDevice,
+    GpuId, GpuOperatingLimits, PowerLimitInfo, TelemetrySnapshot,
 };
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -60,6 +61,33 @@ impl GpuBackend for MockBackend {
             fan_percent: Some(68.0),
         })
     }
+
+    fn operating_limits(&self, id: &GpuId) -> Result<GpuOperatingLimits, ControlError> {
+        if Self::mock_device().id != *id {
+            return Err(ControlError::GpuNotFound(id.uuid.clone()));
+        }
+
+        Ok(GpuOperatingLimits {
+            power: PowerLimitInfo {
+                current_watts: Some(330.0),
+                default_watts: Some(350.0),
+                enforced_watts: Some(330.0),
+                min_watts: Some(100.0),
+                max_watts: Some(400.0),
+            },
+            clocks: ClockLimitInfo {
+                max_graphics_mhz: Some(2100),
+                max_memory_mhz: Some(10000),
+                supported_application_memory_mhz: Some(vec![9501, 810]),
+                graphics_clocks_for_memory_mhz: Some(9501),
+                supported_application_graphics_mhz: Some(vec![2100, 1950, 1800]),
+            },
+            fans: FanLimitInfo {
+                min_percent: Some(30),
+                max_percent: Some(100),
+            },
+        })
+    }
 }
 
 #[cfg(test)]
@@ -73,6 +101,24 @@ mod tests {
 
         assert_eq!(devices.len(), 1);
         assert_eq!(devices[0].id.uuid, "GPU-MOCK-0000");
+    }
+
+    #[test]
+    fn exposes_test_limits() {
+        let backend = MockBackend;
+        let id = backend.enumerate().expect("enumerate")[0].id.clone();
+        let limits = backend.operating_limits(&id).expect("read limits");
+        assert_eq!(limits.power.current_watts, Some(330.0));
+        assert_eq!(limits.clocks.graphics_clocks_for_memory_mhz, Some(9501));
+    }
+
+    #[test]
+    fn limits_reject_unknown_gpu() {
+        let result = MockBackend.operating_limits(&GpuId {
+            index: 9,
+            uuid: "missing".to_string(),
+        });
+        assert!(matches!(result, Err(ControlError::GpuNotFound(_))));
     }
 
     #[test]

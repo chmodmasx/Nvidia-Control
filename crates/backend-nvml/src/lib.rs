@@ -1,5 +1,6 @@
 use nvidia_control_core::{
-    AccessLevel, CapabilitySet, ControlError, GpuBackend, GpuDevice, GpuId, TelemetrySnapshot,
+    AccessLevel, CapabilitySet, ClockLimitInfo, ControlError, FanLimitInfo, GpuBackend,
+    GpuDevice, GpuId, GpuOperatingLimits, PowerLimitInfo, TelemetrySnapshot,
 };
 use nvml_wrapper::{
     enum_wrappers::device::{Clock, TemperatureSensor},
@@ -64,6 +65,40 @@ impl NvmlBackend {
         })
     }
 
+    fn read_operating_limits(&self, device: &Device<'_>) -> Result<GpuOperatingLimits, ControlError> {
+        let constraints = optional_metric(device.power_management_limit_constraints())?;
+        let memory_clocks = optional_metric(device.supported_memory_clocks())?;
+        let selected_memory_clock = memory_clocks
+            .as_ref()
+            .and_then(|clocks| clocks.iter().copied().max());
+        let graphics_clocks = selected_memory_clock
+            .map(|memory_clock| optional_metric(device.supported_graphics_clocks(memory_clock)))
+            .transpose()?
+            .flatten();
+        let fan_range = optional_metric(device.min_max_fan_speed())?;
+
+        Ok(GpuOperatingLimits {
+            power: PowerLimitInfo {
+                current_watts: as_watts(optional_metric(device.power_management_limit())?),
+                default_watts: as_watts(optional_metric(device.power_management_limit_default())?),
+                enforced_watts: as_watts(optional_metric(device.enforced_power_limit())?),
+                min_watts: constraints.as_ref().map(|limits| limits.min_limit as f32 / 1_000.0),
+                max_watts: constraints.as_ref().map(|limits| limits.max_limit as f32 / 1_000.0),
+            },
+            clocks: ClockLimitInfo {
+                max_graphics_mhz: optional_metric(device.max_clock_info(Clock::Graphics))?,
+                max_memory_mhz: optional_metric(device.max_clock_info(Clock::Memory))?,
+                supported_application_memory_mhz: memory_clocks,
+                graphics_clocks_for_memory_mhz: selected_memory_clock.filter(|_| graphics_clocks.is_some()),
+                supported_application_graphics_mhz: graphics_clocks,
+            },
+            fans: FanLimitInfo {
+                min_percent: fan_range.as_ref().map(|range| range.0),
+                max_percent: fan_range.as_ref().map(|range| range.1),
+            },
+        })
+    }
+
     fn read_telemetry(&self, device: &Device<'_>) -> Result<TelemetrySnapshot, ControlError> {
         let temperature_c =
             optional_metric(device.temperature(TemperatureSensor::Gpu))?.map(|value| value as f32);
@@ -115,6 +150,15 @@ impl GpuBackend for NvmlBackend {
         let device = self.device_by_id(id)?;
         self.read_telemetry(&device)
     }
+
+    fn operating_limits(&self, id: &GpuId) -> Result<GpuOperatingLimits, ControlError> {
+        let device = self.device_by_id(id)?;
+        self.read_operating_limits(&device)
+    }
+}
+
+fn as_watts(milliwatts: Option<u32>) -> Option<f32> {
+    milliwatts.map(|value| value as f32 / 1_000.0)
 }
 
 fn read_average_fan_percent(device: &Device<'_>) -> Result<Option<f32>, ControlError> {
@@ -172,7 +216,13 @@ fn nvml_error(operation: &str, error: NvmlError) -> ControlError {
 
 #[cfg(test)]
 mod tests {
-    use super::{probe_read_access, AccessLevel, NvmlError};
+    use super::{as_watts, probe_read_access, AccessLevel, NvmlError};
+
+    #[test]
+    fn converts_power_limit_milliwatts_to_watts() {
+        assert_eq!(as_watts(Some(350_000)), Some(350.0));
+        assert_eq!(as_watts(None), None);
+    }
 
     #[test]
     fn successful_probe_reports_read_only() {

@@ -69,6 +69,8 @@ Capability semantics:
 
 NVML now checks read access to power-limit settings and graphics clocks. Fan control, V/F, compositor and gaming feature capabilities remain unknown until their adapters verify them. `memory_util_percent` is memory-controller activity, not percent of VRAM occupied.
 
+The daemon also emits an `operating_limits` object separate from live telemetry. It reports power-limit current/default/enforced/min/max readings (W), maximum GPU/memory clocks (MHz), optional legacy supported application memory clocks and corresponding graphics clocks for the highest listed memory clock, and fan-setpoint min/max percentages where NVML supports them. These are diagnostic reads only. The legacy application-clock table is not a commitment to use the deprecated application-clock setters.
+
 The next steps are expanded capability probing, stable daemon/UI IPC and the Qt/QML shell.
 
 ## License
