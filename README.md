@@ -6,7 +6,7 @@ Nvidia-Control aims to provide a modern, Wayland-first control application for N
 
 ## Project status
 
-Early prototype / architecture bootstrap.
+Early functional GUI prototype, with a Rust/NVML read-only daemon and a Qt 6/QML frontend.
 
 The first real hardware backend is now present: NVML read-only telemetry. It dynamically loads NVIDIA's NVML library at runtime, so the project can still compile and be tested on CI machines without NVIDIA hardware.
 
@@ -71,7 +71,27 @@ NVML now checks read access to power-limit settings and graphics clocks. Fan con
 
 The daemon also emits an `operating_limits` object separate from live telemetry. It reports power-limit current/default/enforced/min/max readings (W), maximum GPU/memory clocks (MHz), optional legacy supported application memory clocks and corresponding graphics clocks for the highest listed memory clock, and fan-setpoint min/max percentages where NVML supports them. These are diagnostic reads only. The legacy application-clock table is not a commitment to use the deprecated application-clock setters.
 
-The next steps are expanded capability probing, stable daemon/UI IPC and the Qt/QML shell.
+## Qt 6 / QML application
+
+See [ui/README.md](ui/README.md) for build dependencies and instructions. The user-session D-Bus contract is documented in [docs/IPC.md](docs/IPC.md).
+
+Build and run the daemon in **one terminal**:
+
+```bash
+cargo run -p nvidia-control-daemon -- --session
+```
+
+Build and launch the GUI in **another terminal**:
+
+```bash
+cmake -S ui -B build/ui -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/ui --parallel
+./build/ui/nvidia-control
+```
+
+The GUI shows GPU utilization, temperatures, power, clocks, memory and fan telemetry, plus a separate page for read-only hardware limits and capability states. It refreshes every second and handles daemon disconnection. There is no write/control UI yet. The original `cargo run -p nvidia-control-daemon` one-off JSON mode remains supported.
+
+Next steps: validate the GUI on physical hardware; add per-GPU selection, history graphs and packaging before introducing authorized control operations.
 
 ## License
 

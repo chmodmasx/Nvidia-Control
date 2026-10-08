@@ -149,6 +149,12 @@ nix
 
 The project must not install NVIDIA's `.run` package as a generic update mechanism.
 
+## Session IPC and Qt frontend
+
+A concrete, versioned read-only D-Bus interface is documented in [IPC.md](IPC.md). The Rust daemon serves `GetApiVersion` and `GetSnapshot` on the **session bus**. The Qt/QML client reads snapshots asynchronously and never executes NVIDIA APIs or commands itself. Polling is currently once per second; longer-term caching and per-GPU selection are separate tasks.
+
+`--once` remains the CLI diagnostic mode, and `--session` hosts the read-only service. No root privileges or Polkit are required for either current path.
+
 ## Privilege model
 
 Read-only telemetry should remain unprivileged whenever the kernel/driver allows it.
@@ -197,11 +203,14 @@ Each backend should eventually expose its own health state so the GUI can explai
 
 ## Prototype contract
 
-The current prototype intentionally implements only:
+The prototype now implements:
 
-1. the core domain model;
-2. a backend trait;
-3. a deterministic mock backend;
-4. a small executable that enumerates a device and reads telemetry.
+1. the core domain model and NVML/mock backend traits;
+2. read-only GPU identification, telemetry and operating limits;
+3. a versioned read-only session D-Bus service;
+4. a Qt 6/QML dashboard that uses only the D-Bus API;
+5. CI checks for Rust, D-Bus mock smoke test and Qt compilation.
+
+The frontend is an initial shell: graphical hardware validation, historical graphs, multi-GPU selection, packaging and privileged controls remain open.
 
 NVML read-only telemetry has now been validated on a physical RTX 3090 with driver 610.57.04. Read access to power-limit settings and graphics clocks is dynamically probed. A separate `GpuOperatingLimits` snapshot exposes power constraints, max clocks, optional legacy application-clock tables and fan ranges. These readings do not imply permission to write. Privileged writes come later.

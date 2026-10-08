@@ -11,3 +11,4 @@ nvidia-control-backend-mock = { path = "../backend-mock" }
 nvidia-control-backend-nvml = { path = "../backend-nvml" }
 serde.workspace = true
 serde_json.workspace = true
+zbus = "4.4"

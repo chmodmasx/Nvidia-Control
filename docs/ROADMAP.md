@@ -13,8 +13,9 @@ Status: **in progress**
 - [x] deterministic mock backend
 - [x] runnable prototype output
 - [x] CI for format, lint and tests
-- [ ] Qt/QML shell
-- [ ] stable daemon-to-GUI IPC contract
+- [x] initial Qt/QML shell (hardware GUI validation pending)
+- [x] versioned read-only session D-Bus contract
+- [x] mock-backed D-Bus integration smoke test in CI
 
 Exit condition: the mock backend can feed both daemon and UI without either depending on NVIDIA implementation details.
 
@@ -51,13 +52,14 @@ Exit condition: normal monitoring works on NVIDIA hardware without root and with
 
 ## M2 — Qt 6 / QML application
 
-- [ ] navigation shell
-- [ ] GPU overview
-- [ ] live telemetry cards
+- [x] initial navigation shell (Overview / Details)
+- [x] GPU overview for first GPU
+- [x] live telemetry cards (1 s refresh)
 - [ ] historical graphs
-- [ ] backend health/capability view
-- [ ] D-Bus connection/reconnection
-- [ ] graceful degraded mode
+- [x] basic backend status and capability view
+- [x] D-Bus connection/reconnection
+- [x] stale-value clearing on disconnect
+- [ ] GPU selection and physical-device UI validation
 
 ## M3 — Safe tuning
 

@@ -27,3 +27,47 @@ jobs:
 
       - name: Tests
         run: cargo test --workspace
+
+      - name: D-Bus smoke test with mock GPU
+        run: |
+          dbus-run-session -- bash -euo pipefail -c '
+            NVIDIA_CONTROL_BACKEND=mock target/debug/nvidia-control-daemon --session &
+            daemon=$!
+            trap "kill $daemon 2>/dev/null || true" EXIT
+
+            for i in $(seq 1 40); do
+              if busctl --user call io.github.chmodmasx.NvidiaControl \
+                /io/github/chmodmasx/NvidiaControl \
+                io.github.chmodmasx.NvidiaControl1 GetApiVersion >version.txt 2>/dev/null; then
+                break
+              fi
+              sleep 0.25
+            done
+
+            grep -q "u 1" version.txt
+            busctl --user call io.github.chmodmasx.NvidiaControl \
+              /io/github/chmodmasx/NvidiaControl \
+              io.github.chmodmasx.NvidiaControl1 GetSnapshot >snapshot.txt
+            grep -q "GPU-MOCK-0000" snapshot.txt
+            grep -q "operating_limits" snapshot.txt
+          '
+
+  qt:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6 development packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ \
+            qt6-base-dev qt6-declarative-dev \
+            qml6-module-qtquick qml6-module-qtquick-window \
+            qml6-module-qtquick-controls qml6-module-qtquick-layouts
+
+      - name: Configure UI
+        run: cmake -S ui -B build/ui -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build UI
+        run: cmake --build build/ui --parallel 2
