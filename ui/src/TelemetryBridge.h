@@ -1,11 +1,14 @@
 #pragma once
 
+#include <QElapsedTimer>
 #include <QObject>
 #include <QTimer>
 #include <QVariantMap>
 
 class QDBusPendingCallWatcher;
 
+// Thin, asynchronous presentation adapter. Dynamic telemetry is fetched every
+// second; device capabilities and hardware limits are refreshed once a minute.
 class TelemetryBridge : public QObject
 {
     Q_OBJECT
@@ -31,13 +34,26 @@ signals:
     void statusChanged();
 
 private:
-    void handleReply(QDBusPendingCallWatcher *watcher);
+    void requestInventory();
+    void requestTelemetry();
+    void handleInventoryReply(QDBusPendingCallWatcher *watcher);
+    void handleTelemetryReply(QDBusPendingCallWatcher *watcher);
     void setDisconnected(const QString &message);
+    void markConnected();
 
     QTimer m_timer;
-    bool m_pending = false;
+    QElapsedTimer m_inventoryAge;
+
+    // Requests may overlap with one another, but never with another request of
+    // their own kind. Generation/UUID guards discard replies after reconnects.
+    quint64 m_generation = 0;
+    bool m_pendingInventory = false;
+    bool m_pendingTelemetry = false;
     bool m_connected = false;
     QString m_error = QStringLiteral("Servicio no conectado");
+    QString m_gpuUuid;
+    quint32 m_gpuIndex = 0;
+
     QVariantMap m_device;
     QVariantMap m_telemetry;
     QVariantMap m_limits;

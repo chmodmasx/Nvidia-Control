@@ -16,6 +16,8 @@ Status: **in progress**
 - [x] initial Qt/QML shell (hardware GUI validation pending)
 - [x] versioned read-only session D-Bus contract
 - [x] mock-backed D-Bus integration smoke test in CI
+- [x] split D-Bus inventory/telemetry API (backward compatible)
+- [x] daemon-side 60 s inventory cache
 
 Exit condition: the mock backend can feed both daemon and UI without either depending on NVIDIA implementation details.
 
@@ -58,8 +60,11 @@ Exit condition: normal monitoring works on NVIDIA hardware without root and with
 - [ ] historical graphs
 - [x] basic backend status and capability view
 - [x] D-Bus connection/reconnection
+- [x] separate 1 s telemetry and 60 s inventory polling
+- [x] preserve selected GPU by UUID on inventory refresh
 - [x] stale-value clearing on disconnect
-- [ ] GPU selection and physical-device UI validation
+- [ ] GPU selection
+- [x] GUI validated on physical RTX 3090 / KDE Plasma Wayland
 
 ## M3 — Safe tuning
 

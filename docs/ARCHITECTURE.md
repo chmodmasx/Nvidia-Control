@@ -151,7 +151,7 @@ The project must not install NVIDIA's `.run` package as a generic update mechani
 
 ## Session IPC and Qt frontend
 
-A concrete, versioned read-only D-Bus interface is documented in [IPC.md](IPC.md). The Rust daemon serves `GetApiVersion` and `GetSnapshot` on the **session bus**. The Qt/QML client reads snapshots asynchronously and never executes NVIDIA APIs or commands itself. Polling is currently once per second; longer-term caching and per-GPU selection are separate tasks.
+A concrete, versioned read-only D-Bus interface is documented in [IPC.md](IPC.md). The Rust daemon exposes backward-compatible `GetSnapshot` plus `GetInventory` and `GetTelemetry` on the **session bus**. Inventory (GPU IDs, capabilities, power/clock/fan constraints) is cached by the daemon for 60 seconds and refreshed by the UI once per minute. The hot path reads only the selected GPU's telemetry once per second. Both calls are asynchronous and independent. The GUI never executes NVIDIA APIs or commands. See [IPC.md](IPC.md).
 
 `--once` remains the CLI diagnostic mode, and `--session` hosts the read-only service. No root privileges or Polkit are required for either current path.
 

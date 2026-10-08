@@ -1,10 +1,10 @@
 # Session D-Bus API — version 1
 
-The current API is an unprivileged *read-only* transport. It is not the future privileged tuning IPC.
+This is the unprivileged **read-only** session service. Privileged tuning will use a separate authorized service.
 
 ## Identity
 
-| Field | Value |
+| Property | Value |
 | --- | --- |
 | Bus | Session |
 | Service | `io.github.chmodmasx.NvidiaControl` |
@@ -13,37 +13,63 @@ The current API is an unprivileged *read-only* transport. It is not the future p
 
 ## Methods
 
-- `GetApiVersion() → u`: returns `1`
-- `GetSnapshot() → s`: JSON array using the same schema as `nvidia-control-daemon --once`
+| Method | D-Bus signature | Contents | Cadence |
+| --- | --- | --- | --- |
+| `GetApiVersion` | `() → u` | Version `1` | On connection |
+| `GetInventory` | `() → s` | JSON array of `backend`, `device`, `operating_limits` | Startup/reconnection, then 60s |
+| `GetTelemetry` | `(u, s) → s` | Single GPU's telemetry JSON; arguments index and UUID | Every 1s |
+| `GetSnapshot` | `() → s` | Legacy complete JSON array; still supported | On demand |
 
-Each snapshot is a list of records:
+The interface name and version remain unchanged because the new methods are additive; existing `GetSnapshot` clients continue working.
+
+Example abbreviated `GetInventory`:
 ```json
 [
   {
     "backend": "mock",
-    "device": {"id": {"index": 0, "uuid": "GPU-MOCK-0000"}, "name": "NVIDIA Mock GPU"},
-    "telemetry": {"temperature_c": 67, "power_watts": 318},
-    "operating_limits": {"power": {"current_watts": 330}}
+    "device": {
+      "id": {"index": 0, "uuid": "GPU-MOCK-0000"},
+      "name": "NVIDIA Mock GPU"
+    },
+    "operating_limits": {"power": {"current_watts": 330.0}}
   }
 ]
 ```
-The sample is abbreviated; the actual API includes all existing properties. `null` means unknown/not readable for a measurement; `unknown` is a capability evaluation state and differs from confirmed `unsupported`.
 
-## Lifecycle
+Example abbreviated `GetTelemetry(0, "GPU-MOCK-0000")`:
+```json
+{"temperature_c": 67.0, "power_watts": 318.0, "gpu_util_percent": 84.0}
+```
 
-1. Start `nvidia-control-daemon --session` as the desktop user.
-2. The daemon claims its bus name and serves requests on the session bus.
-3. Qt requests snapshots asynchronously every 1000 ms, skipping requests if an earlier call has not returned.
-4. If the service disappears, the UI clears stale measurements, reports disconnection and retries.
-5. `--once` remains available for scripts and debugging.
+The real responses contain all domain fields. Missing metrics return `null`. The mock's write-capability flags are test fixtures, not evidence of real permissions.
 
-Service activation and a systemd user unit are future packaging tasks, not prerequisites for the current development workflow.
+Example CLI queries when using the mock backend:
 
-## Versioning and permissions
+```bash
+busctl --user call io.github.chmodmasx.NvidiaControl \
+  /io/github/chmodmasx/NvidiaControl \
+  io.github.chmodmasx.NvidiaControl1 GetInventory
 
-- The interface name includes `1` for breaking changes.
-- The version method makes client compatibility checks possible.
-- All methods are read-only.
-- No privileged operation should be added to this interface. Future writes belong to narrowly scoped, Polkit-authorized services; the GUI is never root.
-- No hardware-specific read path exists in the Qt process. It deals only with the domain JSON objects.
-- Current UI displays the first GPU even though the API returns all of them. Multi-GPU selection remains a separate UX task.
+busctl --user call io.github.chmodmasx.NvidiaControl \
+  /io/github/chmodmasx/NvidiaControl \
+  io.github.chmodmasx.NvidiaControl1 GetTelemetry us 0 GPU-MOCK-0000
+```
+
+## Caching and reconnection
+
+- **Daemon:** caches enumerated GPUs, capability probes and static operating limits for 60 seconds. Multiple clients share this cache.
+- **GUI:** reads the inventory on startup, after reconnection, and every 60 seconds. It reads only the selected GPU's live telemetry every second.
+- **Performance:** `GetTelemetry` calls only the backend `telemetry` method, without enumeration, power-limit probes or clock-table queries.
+- **Async requests:** inventory and telemetry have independent in-flight guards. Qt discards replies from a previous connection generation and clears measurements when disconnected.
+- **Selection:** currently shows the first GPU and preserves that UUID across inventory refresh. Multi-GPU selection is planned.
+- **Legacy:** `GetSnapshot` remains fully supported and now reuses the cached inventory.
+
+The inventory TTL also means a device removed while the daemon is running can remain listed until the next refresh. Hotplug-aware invalidation remains a future task.
+
+## Contract guarantees
+
+- Nothing exposed by the current bus service can change hardware.
+- `unknown` is not equivalent to confirmed `unsupported`.
+- `memory_util_percent` measures memory-controller activity rather than VRAM occupancy.
+- Additional methods are additive within interface version 1; breaking changes require a new interface version.
+- Daemon activation and user-service packaging are not yet implemented; start `--session` manually.

@@ -53,6 +53,19 @@ jobs:
               io.github.chmodmasx.NvidiaControl1 GetSnapshot >snapshot.txt
             grep -q "GPU-MOCK-0000" snapshot.txt
             grep -q "operating_limits" snapshot.txt
+
+            busctl --user call io.github.chmodmasx.NvidiaControl \
+              /io/github/chmodmasx/NvidiaControl \
+              io.github.chmodmasx.NvidiaControl1 GetInventory >inventory.txt
+            grep -q "GPU-MOCK-0000" inventory.txt
+            grep -q "operating_limits" inventory.txt
+            if grep -q "\\"telemetry\\"" inventory.txt; then exit 1; fi
+
+            busctl --user call io.github.chmodmasx.NvidiaControl \
+              /io/github/chmodmasx/NvidiaControl \
+              io.github.chmodmasx.NvidiaControl1 GetTelemetry us 0 GPU-MOCK-0000 >telemetry.txt
+            grep -q "gpu_util_percent" telemetry.txt
+            if grep -q "operating_limits" telemetry.txt; then exit 1; fi
           '
 
   qt:
