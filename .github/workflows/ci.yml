@@ -28,6 +28,9 @@ jobs:
       - name: Tests
         run: cargo test --workspace
 
+      - name: Build daemon for IPC test
+        run: cargo build -p nvidia-control-daemon
+
       - name: D-Bus smoke test with mock GPU
         run: |
           dbus-run-session -- bash -euo pipefail -c '
@@ -71,3 +74,19 @@ jobs:
 
       - name: Build UI
         run: cmake --build build/ui --parallel 2
+
+      - name: Headless QML startup smoke test
+        run: |
+          QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+            ./build/ui/nvidia-control >ui.log 2>&1 &
+          ui_pid=$!
+          trap 'kill "$ui_pid" 2>/dev/null || true' EXIT
+          sleep 3
+          if ! kill -0 "$ui_pid" 2>/dev/null; then
+            cat ui.log
+            exit 1
+          fi
+          if grep -Eq 'QQmlApplicationEngine failed|module .* is not installed|Type .* unavailable' ui.log; then
+            cat ui.log
+            exit 1
+          fi
