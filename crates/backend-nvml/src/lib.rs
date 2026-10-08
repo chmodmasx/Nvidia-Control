@@ -1,6 +1,6 @@
 use nvidia_control_core::{
-    AccessLevel, CapabilitySet, ClockLimitInfo, ControlError, FanLimitInfo, GpuBackend,
-    GpuDevice, GpuId, GpuOperatingLimits, PowerLimitInfo, TelemetrySnapshot,
+    AccessLevel, CapabilitySet, ClockLimitInfo, ControlError, FanLimitInfo, GpuBackend, GpuDevice,
+    GpuId, GpuOperatingLimits, PowerLimitInfo, TelemetrySnapshot,
 };
 use nvml_wrapper::{
     enum_wrappers::device::{Clock, TemperatureSensor},
@@ -65,7 +65,10 @@ impl NvmlBackend {
         })
     }
 
-    fn read_operating_limits(&self, device: &Device<'_>) -> Result<GpuOperatingLimits, ControlError> {
+    fn read_operating_limits(
+        &self,
+        device: &Device<'_>,
+    ) -> Result<GpuOperatingLimits, ControlError> {
         let constraints = optional_metric(device.power_management_limit_constraints())?;
         let memory_clocks = optional_metric(device.supported_memory_clocks())?;
         let selected_memory_clock = memory_clocks
@@ -82,14 +85,19 @@ impl NvmlBackend {
                 current_watts: as_watts(optional_metric(device.power_management_limit())?),
                 default_watts: as_watts(optional_metric(device.power_management_limit_default())?),
                 enforced_watts: as_watts(optional_metric(device.enforced_power_limit())?),
-                min_watts: constraints.as_ref().map(|limits| limits.min_limit as f32 / 1_000.0),
-                max_watts: constraints.as_ref().map(|limits| limits.max_limit as f32 / 1_000.0),
+                min_watts: constraints
+                    .as_ref()
+                    .map(|limits| limits.min_limit as f32 / 1_000.0),
+                max_watts: constraints
+                    .as_ref()
+                    .map(|limits| limits.max_limit as f32 / 1_000.0),
             },
             clocks: ClockLimitInfo {
                 max_graphics_mhz: optional_metric(device.max_clock_info(Clock::Graphics))?,
                 max_memory_mhz: optional_metric(device.max_clock_info(Clock::Memory))?,
                 supported_application_memory_mhz: memory_clocks,
-                graphics_clocks_for_memory_mhz: selected_memory_clock.filter(|_| graphics_clocks.is_some()),
+                graphics_clocks_for_memory_mhz: selected_memory_clock
+                    .filter(|_| graphics_clocks.is_some()),
                 supported_application_graphics_mhz: graphics_clocks,
             },
             fans: FanLimitInfo {
