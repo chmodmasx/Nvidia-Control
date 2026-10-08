@@ -44,6 +44,7 @@ Status: **in progress**
 - [ ] full multi-backend capability probing
 - [ ] test on multiple driver generations
 - [x] validate NVML read-only telemetry on physical NVIDIA hardware (RTX 3090, driver 610.57.04)
+- [x] validate NVML power/clock/fan limit getters on that RTX 3090 (see [HARDWARE_VALIDATION.md](HARDWARE_VALIDATION.md))
 - [ ] validate other GPU families
 
 Exit condition: normal monitoring works on NVIDIA hardware without root and without `nvidia-smi` parsing.
