@@ -8,7 +8,7 @@ A minimal native GUI for the existing Rust/NVML backend. The Qt frontend **never
 sudo apt install cmake ninja-build g++ qt6-base-dev qt6-declarative-dev \
   qml6-module-qtquick qml6-module-qtquick-window \
   qml6-module-qtquick-controls qml6-module-qtquick-layouts \
-  qml6-module-qtqml-models qml6-module-qtqml-workerscript
+  qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick-templates
 ```
 
 Rust and Cargo are required for the daemon. A functioning NVIDIA proprietary driver is needed for the real NVML backend.
