@@ -71,6 +71,17 @@ NVML now checks read access to power-limit settings and graphics clocks. Fan con
 
 The daemon also emits an `operating_limits` object separate from live telemetry. It reports power-limit current/default/enforced/min/max readings (W), maximum GPU/memory clocks (MHz), optional legacy supported application memory clocks and corresponding graphics clocks for the highest listed memory clock, and fan-setpoint min/max percentages where NVML supports them. These are diagnostic reads only. The legacy application-clock table is not a commitment to use the deprecated application-clock setters.
 
+## M3: restricted power-limit helper (experimental, opt-in)
+
+The first safe-tuning foundation is implemented as two isolated Rust crates:
+
+- `control-power`: a pure transaction/policy engine with mock-tested validation, compare-and-set, readback and best-effort rollback;
+- `power-helper`: a one-shot NVML adapter, with a read-only `inspect` command and root-only `apply` command.
+
+The normal Qt GUI, session D-Bus daemon and per-user install **never run as root** and do not expose a privileged write API. The root-only helper and its Polkit authorization are **not installed by** `scripts/install-user.sh`. Installing the optional root-owned helper requires separate informed administrative action.
+
+For now, changes are deliberately limited to the GPU's driver-reported constraints **and no higher than the factory default**. No changes have been attempted on real hardware. See [docs/POWER_CONTROL.md](docs/POWER_CONTROL.md) for the safe testing procedure. The graphical apply action is not enabled yet.
+
 ## Qt 6 / QML application
 
 See [ui/README.md](ui/README.md) for build dependencies and instructions. The user-session D-Bus contract is documented in [docs/IPC.md](docs/IPC.md).

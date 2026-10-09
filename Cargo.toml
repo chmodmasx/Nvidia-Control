@@ -3,6 +3,8 @@ members = [
     "crates/control-core",
     "crates/backend-mock",
     "crates/backend-nvml",
+    "crates/control-power",
+    "crates/power-helper",
     "crates/control-daemon",
 ]
 resolver = "2"

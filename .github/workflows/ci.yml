@@ -28,6 +28,25 @@ jobs:
       - name: Tests
         run: cargo test --workspace
 
+      - name: Validate power-helper policy and installer metadata
+        run: |
+          bash -n scripts/install-power-helper.sh
+          bash -n scripts/uninstall-power-helper.sh
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          root = ET.parse("packaging/polkit/io.github.chmodmasx.nvidiacontrol.policy").getroot()
+          action = root.find("action")
+          assert action.attrib["id"] == "io.github.chmodmasx.nvidiacontrol.power-limit"
+          assert action.findtext("defaults/allow_active") == "auth_admin"
+          assert action.findtext("defaults/allow_any") == "no"
+          assert action.findtext("defaults/allow_inactive") == "no"
+          annotations = {x.attrib["key"]: x.text for x in action.findall("annotate")}
+          assert annotations["org.freedesktop.policykit.exec.path"] == "/usr/libexec/nvidia-control-power-helper"
+          assert annotations["org.freedesktop.policykit.exec.argv1"] == "apply"
+          assert "auth_admin_keep" not in Path("packaging/polkit/io.github.chmodmasx.nvidiacontrol.policy").read_text()
+          PY
+
       - name: Build daemon for IPC test
         run: cargo build -p nvidia-control-daemon
 

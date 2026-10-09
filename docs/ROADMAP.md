@@ -80,7 +80,14 @@ Exit condition: normal monitoring works on NVIDIA hardware without root and with
 
 **Next priority:** detect actual write support separately from NVML read capabilities, then implement a narrowly scoped, authorized power-limit backend with limits validation, readback and safe restoration. Never infer write permission from readable limits.
 
-- [ ] power-limit read/write
+- [x] independent pure Rust power-change validation and mock-tested transaction engine
+- [x] NVML one-shot privileged power helper (root-only write command, read-only inspect)
+- [x] separate Polkit action and opt-in root-owned installation workflow
+- [x] stale request, bound, factory ceiling, readback and best-effort rollback tests
+- [ ] validate read-only inspect on physical NVIDIA GPU
+- [ ] validate privileged apply and restoration on test hardware (explicit approval)
+- [ ] Qt authenticated apply/revert flow and daemon inventory refresh
+- [ ] power-limit UI write integration (not enabled yet)
 - [ ] clocks
 - [ ] fan controls
 - [ ] persistent profiles

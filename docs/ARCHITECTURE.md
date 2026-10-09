@@ -167,6 +167,16 @@ The optional [per-user installer](ACTIVATION.md) installs the read-only Rust dae
 
 `--once` remains the CLI diagnostic mode, and `--session` hosts the read-only service. No root privileges or Polkit are required for either current path.
 
+## M3 privileged power-limit boundary
+
+The normal session D-Bus service and Qt client remain unprivileged and read-only. `control-power` is a pure Rust library containing the limited power-change transaction: compare expected/current, validate NVML limits and factory ceiling, write, verify readback, and attempt rollback with its own readback if verification fails.
+
+The separate `nvidia-control-power-helper` is the **only** new executable that knows about `set_power_management_limit`. It accepts only `inspect` (read-only) or `apply` (root-only). It identifies a GPU by UUID, not caller-controlled device index, initializes NVML itself, and rechecks current values and limits before any set operation. Failed setter/readback may leave unknown state if restoration also fails; such failures must be treated as critical and displayed explicitly.
+
+The helper is not part of the user's normal systemd session unit. Optional installation uses an explicit root-owned executable under `/usr/libexec`, a root-owned Polkit action requiring `auth_admin` for each apply, and no retained authorization. A helper installed into `~/.local/bin` or built in a user-writable checkout **must never be executed as root**. Future Qt authenticated calls should use only the fixed root-owned helper path.
+
+This milestone has **no actual hardware write validation yet**. See [POWER_CONTROL.md](POWER_CONTROL.md).
+
 ## Privilege model
 
 Read-only telemetry should remain unprivileged whenever the kernel/driver allows it.
