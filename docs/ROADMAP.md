@@ -4,7 +4,7 @@ The order is intentionally conservative. We first stabilize contracts and read-o
 
 ## M0 — Architecture bootstrap
 
-Status: **in progress**
+Status: **complete**
 
 - [x] repository initialized
 - [x] Rust workspace
@@ -13,7 +13,7 @@ Status: **in progress**
 - [x] deterministic mock backend
 - [x] runnable prototype output
 - [x] CI for format, lint and tests
-- [x] initial Qt/QML shell (hardware GUI validation pending)
+- [x] initial Qt/QML shell (validated on RTX 3090 / KDE Plasma Wayland)
 - [x] versioned read-only session D-Bus contract
 - [x] mock-backed D-Bus integration smoke test in CI
 - [x] split D-Bus inventory/telemetry API (backward compatible)
@@ -69,6 +69,7 @@ Exit condition: normal monitoring works on NVIDIA hardware without root and with
 - [x] stale-value clearing on disconnect
 - [x] UUID-based GPU selector in Qt (shown for inventories with 2+ GPUs)
 - [x] multi-GPU selection and reordering tests (mock-dual + Qt catalogue)
+- [x] dual mock inventory visually verified in KDE Plasma (two GPUs shown in selector; 2026-10-08)
 - [ ] multi-GPU visual validation on physical hardware
 - [x] GUI validated on physical RTX 3090 / KDE Plasma Wayland
 - [x] optional per-user D-Bus activation and systemd user service registration
@@ -76,6 +77,8 @@ Exit condition: normal monitoring works on NVIDIA hardware without root and with
 - [x] on-demand D-Bus/systemd user activation validated on physical KDE Plasma Wayland (RTX 3090, driver 610.57.04; 2026-10-08)
 
 ## M3 — Safe tuning
+
+**Next priority:** detect actual write support separately from NVML read capabilities, then implement a narrowly scoped, authorized power-limit backend with limits validation, readback and safe restoration. Never infer write permission from readable limits.
 
 - [ ] power-limit read/write
 - [ ] clocks
