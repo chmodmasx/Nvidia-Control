@@ -68,6 +68,41 @@ jobs:
             if grep -q "operating_limits" telemetry.txt; then exit 1; fi
           '
 
+      - name: Dual-GPU D-Bus read isolation (mock-dual)
+        run: |
+          dbus-run-session -- bash -euo pipefail -c '
+            NVIDIA_CONTROL_BACKEND=mock-dual target/debug/nvidia-control-daemon --session &
+            daemon=$!
+            trap "kill $daemon 2>/dev/null || true" EXIT
+            for i in $(seq 1 40); do
+              if busctl --user call io.github.chmodmasx.NvidiaControl \
+                /io/github/chmodmasx/NvidiaControl \
+                io.github.chmodmasx.NvidiaControl1 GetApiVersion >/dev/null 2>&1; then
+                break
+              fi
+              sleep 0.25
+            done
+            busctl --user call io.github.chmodmasx.NvidiaControl \
+              /io/github/chmodmasx/NvidiaControl \
+              io.github.chmodmasx.NvidiaControl1 GetInventory >dual-inventory.txt
+            grep -q "GPU-MOCK-0000" dual-inventory.txt
+            grep -q "GPU-MOCK-0001" dual-inventory.txt
+            busctl --user call io.github.chmodmasx.NvidiaControl \
+              /io/github/chmodmasx/NvidiaControl \
+              io.github.chmodmasx.NvidiaControl1 GetTelemetry us 0 GPU-MOCK-0000 >dual-a.txt
+            busctl --user call io.github.chmodmasx.NvidiaControl \
+              /io/github/chmodmasx/NvidiaControl \
+              io.github.chmodmasx.NvidiaControl1 GetTelemetry us 1 GPU-MOCK-0001 >dual-b.txt
+            grep -q "318.0" dual-a.txt
+            grep -q "72.5" dual-b.txt
+            if busctl --user call io.github.chmodmasx.NvidiaControl \
+              /io/github/chmodmasx/NvidiaControl \
+              io.github.chmodmasx.NvidiaControl1 GetTelemetry us 0 GPU-MOCK-0001 >/dev/null 2>&1; then
+              echo "Unexpectedly accepted an index/UUID mismatch" >&2
+              exit 1
+            fi
+          '
+
       - name: Check user-install scripts syntax
         run: |
           bash -n scripts/install-user.sh
@@ -119,7 +154,7 @@ jobs:
       - name: Build UI
         run: cmake --build build/ui --parallel 2
 
-      - name: History module unit tests
+      - name: Qt frontend unit tests (history and GPU selection)
         run: ctest --test-dir build/ui --output-on-failure
 
       - name: Headless QML startup smoke test

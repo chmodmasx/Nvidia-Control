@@ -1,4 +1,4 @@
-use nvidia_control_backend_mock::MockBackend;
+use nvidia_control_backend_mock::{DualMockBackend, MockBackend};
 use nvidia_control_backend_nvml::NvmlBackend;
 use nvidia_control_core::{
     ControlError, GpuBackend, GpuDevice, GpuId, GpuOperatingLimits, TelemetrySnapshot,
@@ -149,8 +149,9 @@ fn select_backend() -> Result<Box<dyn GpuBackend>, ControlError> {
     match requested.as_str() {
         "nvml" => Ok(Box::new(NvmlBackend::new()?)),
         "mock" => Ok(Box::new(MockBackend)),
+        "mock-dual" => Ok(Box::new(DualMockBackend)),
         other => Err(ControlError::BackendUnavailable(format!(
-            "unknown backend '{other}'; supported backends: nvml, mock"
+            "unknown backend '{other}'; supported backends: nvml, mock, mock-dual"
         ))),
     }
 }

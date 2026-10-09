@@ -67,7 +67,9 @@ Exit condition: normal monitoring works on NVIDIA hardware without root and with
 - [x] separate 1 s telemetry and 60 s inventory polling
 - [x] preserve selected GPU by UUID on inventory refresh
 - [x] stale-value clearing on disconnect
-- [ ] GPU selection
+- [x] UUID-based GPU selector in Qt (shown for inventories with 2+ GPUs)
+- [x] multi-GPU selection and reordering tests (mock-dual + Qt catalogue)
+- [ ] multi-GPU visual validation on physical hardware
 - [x] GUI validated on physical RTX 3090 / KDE Plasma Wayland
 - [x] optional per-user D-Bus activation and systemd user service registration
 - [x] per-user KDE desktop launcher and uninstall script

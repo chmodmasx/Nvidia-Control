@@ -113,7 +113,7 @@ The GUI shows GPU utilization, temperatures, power, clocks, memory and fan telem
 
 The GUI has been validated on an RTX 3090 under KDE Plasma Wayland. It now includes a third **Historial** page with six time-series graphs and a 5 / 15 / 60 minute selector. History is limited to 3601 timestamped samples (up to 60 minutes), stored in memory only and not sent back to D-Bus. Missing readings and reconnection gaps are not drawn as continuous measurements.
 
-The history page has been validated on an RTX 3090. Per-user launcher/activation packaging is available; distribution packages and automatic updates are still pending. Next steps: validate on-demand activation on physical KDE hardware, add per-GPU selection, and then introduce separately authorized control operations.
+The history page and on-demand activation have been validated on an RTX 3090 under KDE Plasma Wayland. The GUI now shows a UUID-based GPU picker for systems with multiple NVIDIA GPUs and preserves that choice through inventory reorder/reconnect. A `mock-dual` backend and Qt catalogue tests exercise the two-GPU path without additional hardware; physical multi-GPU validation remains outstanding. Per-user launcher/activation packaging is available; distribution packages and automatic updates are still pending. Next steps: physical multi-GPU verification when feasible and separately authorized GPU controls.
 
 ## License
 

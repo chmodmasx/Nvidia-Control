@@ -39,6 +39,13 @@ ApplicationWindow {
         if (value === "unsupported") return "No compatible"
         return "Sin verificar"
     }
+    function optionIndex(options, uuid) {
+        for (let i = 0; i < options.length; ++i) {
+            if (options[i].uuid === uuid)
+                return i
+        }
+        return -1
+    }
     function frequencyList(values) {
         return values && values.length > 0 ? values.join(", ") + " MHz" : "No informado"
     }
@@ -138,6 +145,23 @@ ApplicationWindow {
 
             Item { Layout.fillWidth: true }
 
+            ComboBox {
+                id: gpuSelector
+                visible: telemetryBridge.gpuOptions.length > 1
+                enabled: visible
+                Layout.preferredWidth: 270
+                Layout.preferredHeight: 38
+                model: telemetryBridge.gpuOptions
+                textRole: "label"
+                valueRole: "uuid"
+                currentIndex: window.optionIndex(telemetryBridge.gpuOptions,
+                                                 telemetryBridge.selectedGpuUuid)
+                onActivated: telemetryBridge.selectGpu(currentValue)
+
+                ToolTip.visible: hovered
+                ToolTip.text: "Seleccionar GPU: los sensores y límites cambian juntos; el historial se reinicia."
+            }
+
             Rectangle {
                 width: 12
                 height: 12
@@ -163,7 +187,7 @@ ApplicationWindow {
             Label {
                 anchors.fill: parent
                 anchors.margins: 12
-                text: telemetryBridge.error + " · Iniciá el daemon con --session."
+                text: telemetryBridge.error
                 color: "#ffd5c7"
                 wrapMode: Text.WordWrap
                 verticalAlignment: Text.AlignVCenter

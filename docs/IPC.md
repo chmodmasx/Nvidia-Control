@@ -61,7 +61,7 @@ busctl --user call io.github.chmodmasx.NvidiaControl \
 - **GUI:** reads the inventory on startup, after reconnection, and every 60 seconds. It reads only the selected GPU's live telemetry every second.
 - **Performance:** `GetTelemetry` calls only the backend `telemetry` method, without enumeration, power-limit probes or clock-table queries.
 - **Async requests:** inventory and telemetry have independent in-flight guards. Qt discards replies from a previous connection generation and clears measurements when disconnected.
-- **Selection:** currently shows the first GPU and preserves that UUID across inventory refresh. Multi-GPU selection is planned.
+- **Selection:** the GUI offers a selector when more than one GPU is available. Each option is keyed by UUID (not an unstable position); selecting another card immediately clears the prior sensor values and history, then requests that card's telemetry and limits. The preference survives reconnects, while removed GPUs fall back to the first discovered GPU.
 - **Legacy:** `GetSnapshot` remains fully supported and now reuses the cached inventory.
 
 The inventory TTL also means a device removed while the daemon is running can remain listed until the next refresh. Hotplug-aware invalidation remains a future task.

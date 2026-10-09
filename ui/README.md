@@ -42,7 +42,7 @@ Terminal 2 (GUI):
 ./build/ui/nvidia-control
 ```
 
-For a GPU-less development machine use `NVIDIA_CONTROL_BACKEND=mock cargo run -p nvidia-control-daemon -- --session`.
+For a GPU-less development machine use `NVIDIA_CONTROL_BACKEND=mock cargo run -p nvidia-control-daemon -- --session`. To test **two separate GPUs** without physical hardware, use `NVIDIA_CONTROL_BACKEND=mock-dual cargo run -p nvidia-control-daemon -- --session` (stop the existing systemd user service first; a single owner may claim the D-Bus name). In this mode the two devices have different UUIDs, limits and power/temperature values. The normal `nvml` backend is unaffected.
 
 To print a one-time JSON diagnostic as before, run `cargo run -p nvidia-control-daemon` (or add `-- --once`).
 
@@ -71,7 +71,7 @@ No privileged methods exist in this interface. Tuning operations require a separ
 
 ## Current limitations
 
-- Dashboard initially displays the first GPU. Inventory includes all enumerated devices; GPU selection can be added without changing the wire format.
+- The header shows a GPU selector only when inventory contains multiple cards. Selection uses the stable UUID and updates sensors, limits and capability metadata atomically. Changes clear the local history; reconnecting to the same UUID restores the preferred card. GPU reordering is handled by UUID, not index. The `GetInventory`/`GetTelemetry` wire format is unchanged.
 - The **Historial** page plots GPU utilization, core temperature, power draw, VRAM usage, graphics clock and memory clock. Select 5, 15 or 60 minutes. Samples are retained only in RAM while the GUI runs, with a strict 60-minute/3601-sample cap. Missing measurements and gaps after disconnected periods are not joined. Moving to a different GPU resets the history; reconnecting to the same GPU keeps it.
 - The optional per-user installer supports D-Bus on-demand startup via a systemd user unit; system-wide distribution packaging remains pending.
 - Legacy application-clock table is read-only diagnostic information and does not imply supported overclock controls.

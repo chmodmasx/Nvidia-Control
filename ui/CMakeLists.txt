@@ -11,6 +11,8 @@ qt_add_executable(nvidia-control
     src/main.cpp
     src/TelemetryBridge.cpp
     src/TelemetryBridge.h
+    src/GpuCatalog.cpp
+    src/GpuCatalog.h
     src/TelemetryHistory.cpp
     src/TelemetryHistory.h
 )
@@ -49,3 +51,13 @@ qt_add_executable(nvidia-control-history-tests
 target_include_directories(nvidia-control-history-tests PRIVATE src)
 target_link_libraries(nvidia-control-history-tests PRIVATE Qt6::Core Qt6::Test)
 add_test(NAME history-store COMMAND nvidia-control-history-tests)
+
+# Pure inventory/selection validation without D-Bus or physical GPUs.
+qt_add_executable(nvidia-control-catalog-tests
+    tests/GpuCatalogTests.cpp
+    src/GpuCatalog.cpp
+    src/GpuCatalog.h
+)
+target_include_directories(nvidia-control-catalog-tests PRIVATE src)
+target_link_libraries(nvidia-control-catalog-tests PRIVATE Qt6::Core Qt6::Test)
+add_test(NAME gpu-catalog COMMAND nvidia-control-catalog-tests)
