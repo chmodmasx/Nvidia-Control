@@ -69,6 +69,9 @@ Exit condition: normal monitoring works on NVIDIA hardware without root and with
 - [x] stale-value clearing on disconnect
 - [ ] GPU selection
 - [x] GUI validated on physical RTX 3090 / KDE Plasma Wayland
+- [x] optional per-user D-Bus activation and systemd user service registration
+- [x] per-user KDE desktop launcher and uninstall script
+- [ ] on-demand activation validated on physical KDE system
 
 ## M3 — Safe tuning
 
@@ -137,7 +140,8 @@ Experimental features must never be prerequisites for stable features.
 - [ ] rpm-ostree/image-based strategy
 - [ ] Nix/NixOS strategy
 - [ ] package builds
-- [ ] desktop integration
+- [x] development-stage per-user desktop entry and D-Bus activation
+- [ ] distribution-ready desktop integration
 - [ ] update safety checks
 
 ## Non-goals

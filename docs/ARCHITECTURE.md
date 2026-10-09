@@ -159,7 +159,11 @@ The independent `ui/src/TelemetryHistory.{h,cpp}` module subscribes to successfu
 
 The `HistoryChart.qml` component queries that store for the selected 5, 15 or 60 minute window and plots only while visible. Six metrics are available: GPU load, GPU temperature, power, used VRAM (converted from bytes to GiB for display only), graphics clock and memory clock. An absent reading is treated as a discontinuity, and gaps longer than 3.5 seconds do not become misleading interpolated curves. Restarting the UI clears its local history; reconnecting to the same GPU preserves recorded samples, while a GPU identity change resets it. Unit tests exercise bounded retention, window selection, missing data and reset behavior.
 
-History is a **presentation-side concern** and remains independent of backend abstractions. Persistent storage or exported time-series data, if needed, should be a separate optional module rather than a requirement for telemetry.
+History is a **presentation-side concern** and remains independent of backend abstractions.
+
+## On-demand service activation
+
+The optional [per-user installer](ACTIVATION.md) installs the read-only Rust daemon under `~/.local/bin`, a `Type=dbus` systemd user unit and a matching D-Bus session service file containing `SystemdService=` plus the executable `Exec=` fallback. The frontend initiates a normal `GetInventory` call; systemd (when integrated with the desktop session bus) starts the daemon only on demand. The unit is **not enabled** at login, and neither the unit nor the GUI runs as root. Distribution packaging is separate from this per-user development installation. Persistent storage or exported time-series data, if needed, should be a separate optional module rather than a requirement for telemetry.
 
 `--once` remains the CLI diagnostic mode, and `--session` hosts the read-only service. No root privileges or Polkit are required for either current path.
 

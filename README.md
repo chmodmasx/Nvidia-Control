@@ -75,6 +75,26 @@ The daemon also emits an `operating_limits` object separate from live telemetry.
 
 See [ui/README.md](ui/README.md) for build dependencies and instructions. The user-session D-Bus contract is documented in [docs/IPC.md](docs/IPC.md).
 
+### Per-user installation (recommended)
+
+For a native KDE launcher and **automatic D-Bus activation**, run:
+
+```bash
+bash scripts/install-user.sh
+```
+
+This builds both executables, installs them under `~/.local/bin`, and registers a session D-Bus service plus a `systemd --user` unit. **No sudo and no login autostart.** Simply launch `Nvidia-Control` from KDE; its first D-Bus request starts the daemon on demand. Stop any old manually started `cargo run -- --session` first, as only one instance can own the service name.
+
+To uninstall the user-level installation:
+
+```bash
+bash scripts/uninstall-user.sh
+```
+
+See [docs/ACTIVATION.md](docs/ACTIVATION.md) for files, commands and troubleshooting.
+
+### Manual development mode
+
 Build and run the daemon in **one terminal**:
 
 ```bash
@@ -93,7 +113,7 @@ The GUI shows GPU utilization, temperatures, power, clocks, memory and fan telem
 
 The GUI has been validated on an RTX 3090 under KDE Plasma Wayland. It now includes a third **Historial** page with six time-series graphs and a 5 / 15 / 60 minute selector. History is limited to 3601 timestamped samples (up to 60 minutes), stored in memory only and not sent back to D-Bus. Missing readings and reconnection gaps are not drawn as continuous measurements.
 
-Next steps: validate this history page on real hardware; add per-GPU selection and packaging before introducing authorized control operations.
+The history page has been validated on an RTX 3090. Per-user launcher/activation packaging is available; distribution packages and automatic updates are still pending. Next steps: validate on-demand activation on physical KDE hardware, add per-GPU selection, and then introduce separately authorized control operations.
 
 ## License
 

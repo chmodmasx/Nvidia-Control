@@ -26,6 +26,10 @@ ctest --test-dir build/ui --output-on-failure
 
 ## Run
 
+Recommended: from the repository root, run `bash scripts/install-user.sh`, then launch **Nvidia-Control** from KDE. The installer registers a D-Bus activated systemd user service so no terminal needs to remain open. See [ACTIVATION.md](../docs/ACTIVATION.md). Stop any manually running daemon first. No sudo, no login-time enabling.
+
+For development without installing, use two terminals.
+
 Terminal 1 (long-running, session D-Bus):
 
 ```bash
@@ -69,5 +73,5 @@ No privileged methods exist in this interface. Tuning operations require a separ
 
 - Dashboard initially displays the first GPU. Inventory includes all enumerated devices; GPU selection can be added without changing the wire format.
 - The **Historial** page plots GPU utilization, core temperature, power draw, VRAM usage, graphics clock and memory clock. Select 5, 15 or 60 minutes. Samples are retained only in RAM while the GUI runs, with a strict 60-minute/3601-sample cap. Missing measurements and gaps after disconnected periods are not joined. Moving to a different GPU resets the history; reconnecting to the same GPU keeps it.
-- No D-Bus activation/systemd user unit packaging yet; start the daemon manually.
+- The optional per-user installer supports D-Bus on-demand startup via a systemd user unit; system-wide distribution packaging remains pending.
 - Legacy application-clock table is read-only diagnostic information and does not imply supported overclock controls.

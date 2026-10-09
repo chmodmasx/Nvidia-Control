@@ -72,4 +72,4 @@ The inventory TTL also means a device removed while the daemon is running can re
 - `unknown` is not equivalent to confirmed `unsupported`.
 - `memory_util_percent` measures memory-controller activity rather than VRAM occupancy.
 - Additional methods are additive within interface version 1; breaking changes require a new interface version.
-- Daemon activation and user-service packaging are not yet implemented; start `--session` manually.
+- Per-user D-Bus activation and a Type=dbus systemd user unit can be installed with `bash scripts/install-user.sh` (see [ACTIVATION.md](ACTIVATION.md)). This does not modify the read-only API contract. Manual `--session` remains available for development.

@@ -68,6 +68,112 @@ jobs:
             if grep -q "operating_limits" telemetry.txt; then exit 1; fi
           '
 
+      - name: Check user-install scripts syntax
+        run: |
+          bash -n scripts/install-user.sh
+          bash -n scripts/uninstall-user.sh
+
+      - name: D-Bus automatic activation smoke test (isolated, mock)
+        run: |
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          mkdir -p "$tmp/home"
+          export HOME="$tmp/home"
+          export XDG_DATA_HOME="$tmp/data"
+          export XDG_CONFIG_HOME="$tmp/config"
+          bash scripts/install-user.sh --prebuilt --daemon-only --no-reload
+          grep -q '^Type=dbus
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6 development packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ \
+            qt6-base-dev qt6-declarative-dev \
+            qml6-module-qtquick qml6-module-qtquick-window \
+            qml6-module-qtquick-controls qml6-module-qtquick-layouts \
+            qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick-templates
+
+      - name: Configure UI
+        run: cmake -S ui -B build/ui -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build UI
+        run: cmake --build build/ui --parallel 2
+
+      - name: History module unit tests
+        run: ctest --test-dir build/ui --output-on-failure
+
+      - name: Headless QML startup smoke test
+        run: |
+          QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+            ./build/ui/nvidia-control >ui.log 2>&1 &
+          ui_pid=$!
+          trap 'kill "$ui_pid" 2>/dev/null || true' EXIT
+          sleep 3
+          if ! kill -0 "$ui_pid" 2>/dev/null; then
+            cat ui.log
+            exit 1
+          fi
+          if grep -Eq 'QQmlApplicationEngine failed|module .* is not installed|Type .* unavailable' ui.log; then
+            cat ui.log
+            exit 1
+          fi
+ "$XDG_CONFIG_HOME/systemd/user/nvidia-control-daemon.service"
+          grep -q '^SystemdService=nvidia-control-daemon.service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6 development packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ \
+            qt6-base-dev qt6-declarative-dev \
+            qml6-module-qtquick qml6-module-qtquick-window \
+            qml6-module-qtquick-controls qml6-module-qtquick-layouts \
+            qml6-module-qtqml-models qml6-module-qtqml-workerscript qml6-module-qtquick-templates
+
+      - name: Configure UI
+        run: cmake -S ui -B build/ui -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build UI
+        run: cmake --build build/ui --parallel 2
+
+      - name: History module unit tests
+        run: ctest --test-dir build/ui --output-on-failure
+
+      - name: Headless QML startup smoke test
+        run: |
+          QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+            ./build/ui/nvidia-control >ui.log 2>&1 &
+          ui_pid=$!
+          trap 'kill "$ui_pid" 2>/dev/null || true' EXIT
+          sleep 3
+          if ! kill -0 "$ui_pid" 2>/dev/null; then
+            cat ui.log
+            exit 1
+          fi
+          if grep -Eq 'QQmlApplicationEngine failed|module .* is not installed|Type .* unavailable' ui.log; then
+            cat ui.log
+            exit 1
+          fi
+ \
+            "$XDG_DATA_HOME/dbus-1/services/io.github.chmodmasx.NvidiaControl.service"
+          NVIDIA_CONTROL_BACKEND=mock dbus-run-session -- bash -euo pipefail -c '
+            busctl --user call io.github.chmodmasx.NvidiaControl \
+              /io/github/chmodmasx/NvidiaControl \
+              io.github.chmodmasx.NvidiaControl1 GetApiVersion >activation-version.txt
+            grep -q "u 1" activation-version.txt
+            busctl --user call io.github.chmodmasx.NvidiaControl \
+              /io/github/chmodmasx/NvidiaControl \
+              io.github.chmodmasx.NvidiaControl1 GetInventory >activation-inventory.txt
+            grep -q "GPU-MOCK-0000" activation-inventory.txt
+          '
+          bash scripts/uninstall-user.sh
+          test ! -f "$XDG_DATA_HOME/dbus-1/services/io.github.chmodmasx.NvidiaControl.service"
+
   qt:
     runs-on: ubuntu-24.04
     steps:
