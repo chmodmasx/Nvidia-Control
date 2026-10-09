@@ -158,8 +158,8 @@ ApplicationWindow {
                                                  telemetryBridge.selectedGpuUuid)
                 onActivated: telemetryBridge.selectGpu(currentValue)
 
-                ToolTip.visible: hovered
-                ToolTip.text: "Seleccionar GPU: los sensores y límites cambian juntos; el historial se reinicia."
+                // The dropdown must remain unobstructed. The old hover tooltip
+                // overlapped the popup while selecting the second GPU.
             }
 
             Rectangle {
