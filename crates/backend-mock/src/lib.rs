@@ -158,15 +158,25 @@ mod tests {
         assert_eq!(devices[0].id.index, 0);
         assert_eq!(devices[1].id.index, 1);
         assert_eq!(
-            DualMockBackend.telemetry(&devices[0].id).unwrap().power_watts,
+            DualMockBackend
+                .telemetry(&devices[0].id)
+                .unwrap()
+                .power_watts,
             Some(318.0)
         );
         assert_eq!(
-            DualMockBackend.telemetry(&devices[1].id).unwrap().power_watts,
+            DualMockBackend
+                .telemetry(&devices[1].id)
+                .unwrap()
+                .power_watts,
             Some(72.5)
         );
         assert_eq!(
-            DualMockBackend.operating_limits(&devices[1].id).unwrap().power.max_watts,
+            DualMockBackend
+                .operating_limits(&devices[1].id)
+                .unwrap()
+                .power
+                .max_watts,
             Some(180.0)
         );
         assert!(matches!(
