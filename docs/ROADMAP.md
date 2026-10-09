@@ -71,7 +71,7 @@ Exit condition: normal monitoring works on NVIDIA hardware without root and with
 - [x] GUI validated on physical RTX 3090 / KDE Plasma Wayland
 - [x] optional per-user D-Bus activation and systemd user service registration
 - [x] per-user KDE desktop launcher and uninstall script
-- [ ] on-demand activation validated on physical KDE system
+- [x] on-demand D-Bus/systemd user activation validated on physical KDE Plasma Wayland (RTX 3090, driver 610.57.04; 2026-10-08)
 
 ## M3 — Safe tuning
 
