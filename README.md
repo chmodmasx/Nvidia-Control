@@ -91,7 +91,9 @@ cmake --build build/ui --parallel
 
 The GUI shows GPU utilization, temperatures, power, clocks, memory and fan telemetry, plus a separate page for read-only hardware limits and capability states. It polls only live telemetry every second; the daemon caches GPU inventory and operating limits for 60 seconds, and the GUI refreshes those slowly changing values once per minute. The split D-Bus API preserves the existing `GetSnapshot` method. The GUI handles daemon disconnection. There is no write/control UI yet. The original `cargo run -p nvidia-control-daemon` one-off JSON mode remains supported.
 
-The GUI has been validated on an RTX 3090 under KDE Plasma Wayland. Next steps: add per-GPU selection, history graphs and packaging before introducing authorized control operations.
+The GUI has been validated on an RTX 3090 under KDE Plasma Wayland. It now includes a third **Historial** page with six time-series graphs and a 5 / 15 / 60 minute selector. History is limited to 3601 timestamped samples (up to 60 minutes), stored in memory only and not sent back to D-Bus. Missing readings and reconnection gaps are not drawn as continuous measurements.
+
+Next steps: validate this history page on real hardware; add per-GPU selection and packaging before introducing authorized control operations.
 
 ## License
 

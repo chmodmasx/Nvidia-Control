@@ -150,6 +150,10 @@ void TelemetryBridge::handleInventoryReply(QDBusPendingCallWatcher *watcher)
     }
 
     const bool gpuChanged = uuid != m_gpuUuid;
+    if (!m_lastObservedUuid.isEmpty() && m_lastObservedUuid != uuid) {
+        emit deviceChanged();
+    }
+    m_lastObservedUuid = uuid;
     m_gpuUuid = uuid;
     m_gpuIndex = static_cast<quint32>(index.toDouble());
     m_device = gpu.toObject().toVariantMap();
@@ -202,6 +206,7 @@ void TelemetryBridge::handleTelemetryReply(QDBusPendingCallWatcher *watcher)
 
     m_telemetry = doc.object().toVariantMap();
     emit snapshotChanged();
+    emit telemetryReceived(m_telemetry);
     markConnected();
 }
 

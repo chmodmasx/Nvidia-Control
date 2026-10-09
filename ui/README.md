@@ -21,6 +21,7 @@ Run these commands from the repository root:
 cargo build -p nvidia-control-daemon
 cmake -S ui -B build/ui -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build/ui --parallel
+ctest --test-dir build/ui --output-on-failure
 ```
 
 ## Run
@@ -67,6 +68,6 @@ No privileged methods exist in this interface. Tuning operations require a separ
 ## Current limitations
 
 - Dashboard initially displays the first GPU. Inventory includes all enumerated devices; GPU selection can be added without changing the wire format.
-- No telemetry history/graphs yet. The frontend updates current values at one-second intervals.
+- The **Historial** page plots GPU utilization, core temperature, power draw, VRAM usage, graphics clock and memory clock. Select 5, 15 or 60 minutes. Samples are retained only in RAM while the GUI runs, with a strict 60-minute/3601-sample cap. Missing measurements and gaps after disconnected periods are not joined. Moving to a different GPU resets the history; reconnecting to the same GPU keeps it.
 - No D-Bus activation/systemd user unit packaging yet; start the daemon manually.
 - Legacy application-clock table is read-only diagnostic information and does not imply supported overclock controls.

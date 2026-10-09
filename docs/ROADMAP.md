@@ -57,7 +57,11 @@ Exit condition: normal monitoring works on NVIDIA hardware without root and with
 - [x] initial navigation shell (Overview / Details)
 - [x] GPU overview for first GPU
 - [x] live telemetry cards (1 s refresh)
-- [ ] historical graphs
+- [x] live history graphs (GPU utilization, temperature, power, VRAM, core/memory clocks)
+- [x] select 5 / 15 / 60 minute range
+- [x] bounded in-memory retention with gap-aware plotting
+- [x] frontend history-store unit tests in CI
+- [ ] persistent historical data (optional future feature)
 - [x] basic backend status and capability view
 - [x] D-Bus connection/reconnection
 - [x] separate 1 s telemetry and 60 s inventory polling

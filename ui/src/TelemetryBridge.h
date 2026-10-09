@@ -32,6 +32,8 @@ public:
 signals:
     void snapshotChanged();
     void statusChanged();
+    void telemetryReceived(const QVariantMap &values);
+    void deviceChanged();
 
 private:
     void requestInventory();
@@ -52,6 +54,7 @@ private:
     bool m_connected = false;
     QString m_error = QStringLiteral("Servicio no conectado");
     QString m_gpuUuid;
+    QString m_lastObservedUuid; // Survives disconnects for history identity.
     quint32 m_gpuIndex = 0;
 
     QVariantMap m_device;

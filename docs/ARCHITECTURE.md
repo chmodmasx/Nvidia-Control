@@ -153,6 +153,14 @@ The project must not install NVIDIA's `.run` package as a generic update mechani
 
 A concrete, versioned read-only D-Bus interface is documented in [IPC.md](IPC.md). The Rust daemon exposes backward-compatible `GetSnapshot` plus `GetInventory` and `GetTelemetry` on the **session bus**. Inventory (GPU IDs, capabilities, power/clock/fan constraints) is cached by the daemon for 60 seconds and refreshed by the UI once per minute. The hot path reads only the selected GPU's telemetry once per second. Both calls are asynchronous and independent. The GUI never executes NVIDIA APIs or commands. See [IPC.md](IPC.md).
 
+## Frontend telemetry history
+
+The independent `ui/src/TelemetryHistory.{h,cpp}` module subscribes to successful `TelemetryBridge::telemetryReceived` events. It keeps timestamped in-memory telemetry samples for at most **60 minutes and 3601 entries**, without modifying the daemon, NVML, or the D-Bus v1 schema.
+
+The `HistoryChart.qml` component queries that store for the selected 5, 15 or 60 minute window and plots only while visible. Six metrics are available: GPU load, GPU temperature, power, used VRAM (converted from bytes to GiB for display only), graphics clock and memory clock. An absent reading is treated as a discontinuity, and gaps longer than 3.5 seconds do not become misleading interpolated curves. Restarting the UI clears its local history; reconnecting to the same GPU preserves recorded samples, while a GPU identity change resets it. Unit tests exercise bounded retention, window selection, missing data and reset behavior.
+
+History is a **presentation-side concern** and remains independent of backend abstractions. Persistent storage or exported time-series data, if needed, should be a separate optional module rather than a requirement for telemetry.
+
 `--once` remains the CLI diagnostic mode, and `--session` hosts the read-only service. No root privileges or Polkit are required for either current path.
 
 ## Privilege model
@@ -211,6 +219,6 @@ The prototype now implements:
 4. a Qt 6/QML dashboard that uses only the D-Bus API;
 5. CI checks for Rust, D-Bus mock smoke test and Qt compilation.
 
-The frontend is an initial shell: graphical hardware validation, historical graphs, multi-GPU selection, packaging and privileged controls remain open.
+The frontend is an initial shell with live history graphs. Physical hardware validation of the new history page, multi-GPU selection, packaging and privileged controls remain open.
 
 NVML read-only telemetry has now been validated on a physical RTX 3090 with driver 610.57.04. Read access to power-limit settings and graphics clocks is dynamically probed. A separate `GpuOperatingLimits` snapshot exposes power constraints, max clocks, optional legacy application-clock tables and fan ranges. These readings do not imply permission to write. Privileged writes come later.

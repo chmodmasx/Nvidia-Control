@@ -13,6 +13,7 @@ ApplicationWindow {
     color: "#20242c"
 
     property int currentPage: 0
+    property int historyMinutes: 5
     readonly property var device: telemetryBridge.device
     readonly property var sensors: telemetryBridge.telemetry
     readonly property var limits: telemetryBridge.limits
@@ -66,7 +67,7 @@ ApplicationWindow {
             }
 
             Repeater {
-                model: ["Resumen", "Detalles"]
+                model: ["Resumen", "Detalles", "Historial"]
                 delegate: Button {
                     required property int index
                     required property string modelData
@@ -122,7 +123,8 @@ ApplicationWindow {
             ColumnLayout {
                 spacing: 4
                 Label {
-                    text: window.currentPage === 0 ? "Resumen de GPU" : "Límites y capacidades"
+                    text: window.currentPage === 0 ? "Resumen de GPU" :
+                          window.currentPage === 1 ? "Límites y capacidades" : "Historial de telemetría"
                     color: "#f6f6f6"
                     font.pixelSize: 27
                     font.weight: Font.DemiBold
@@ -249,6 +251,107 @@ ApplicationWindow {
                         text: "Los valores no disponibles se muestran como «—». Sin cambios de hardware."
                         color: "#8b9bae"
                         font.pixelSize: 12
+                    }
+                }
+
+                ColumnLayout {
+                    visible: window.currentPage === 2
+                    Layout.fillWidth: true
+                    spacing: 16
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Label {
+                            text: "Historial local · hasta 60 minutos"
+                            color: "#b1bfd0"
+                            font.pixelSize: 13
+                            Layout.fillWidth: true
+                        }
+
+                        Repeater {
+                            model: [5, 15, 60]
+                            delegate: Button {
+                                required property int modelData
+                                text: modelData + " min"
+                                onClicked: window.historyMinutes = modelData
+                                background: Rectangle {
+                                    radius: 8
+                                    color: window.historyMinutes === modelData ? "#335e7b" : "#303741"
+                                    border.color: window.historyMinutes === modelData ? "#51a2da" : "#424b56"
+                                }
+                                contentItem: Label {
+                                    text: parent.text
+                                    color: "#eff6fc"
+                                    font.pixelSize: 12
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    leftPadding: 12
+                                    rightPadding: 12
+                                }
+                            }
+                        }
+                    }
+
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: width >= 880 ? 2 : 1
+                        columnSpacing: 12
+                        rowSpacing: 12
+
+                        HistoryChart {
+                            Layout.fillWidth: true
+                            heading: "Uso de GPU"
+                            metricKey: "gpu_util_percent"
+                            unit: "%"
+                            percentage: true
+                            minutes: window.historyMinutes
+                        }
+                        HistoryChart {
+                            Layout.fillWidth: true
+                            heading: "Temperatura GPU"
+                            metricKey: "temperature_c"
+                            unit: "°C"
+                            minutes: window.historyMinutes
+                        }
+                        HistoryChart {
+                            Layout.fillWidth: true
+                            heading: "Potencia"
+                            metricKey: "power_watts"
+                            unit: "W"
+                            decimals: 1
+                            minutes: window.historyMinutes
+                        }
+                        HistoryChart {
+                            Layout.fillWidth: true
+                            heading: "Memoria de video utilizada"
+                            metricKey: "memory_used_bytes"
+                            unit: "GiB"
+                            decimals: 2
+                            minutes: window.historyMinutes
+                        }
+                        HistoryChart {
+                            Layout.fillWidth: true
+                            heading: "Frecuencia de GPU"
+                            metricKey: "core_clock_mhz"
+                            unit: "MHz"
+                            minutes: window.historyMinutes
+                        }
+                        HistoryChart {
+                            Layout.fillWidth: true
+                            heading: "Frecuencia de memoria"
+                            metricKey: "memory_clock_mhz"
+                            unit: "MHz"
+                            minutes: window.historyMinutes
+                        }
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        text: "Los gráficos se completan mientras Nvidia-Control esté abierto. " +
+                              "Las lecturas no disponibles y las desconexiones no se unen con líneas."
+                        color: "#8b9bae"
+                        font.pixelSize: 12
+                        wrapMode: Text.WordWrap
                     }
                 }
 

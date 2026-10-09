@@ -89,6 +89,9 @@ jobs:
       - name: Build UI
         run: cmake --build build/ui --parallel 2
 
+      - name: History module unit tests
+        run: ctest --test-dir build/ui --output-on-failure
+
       - name: Headless QML startup smoke test
         run: |
           QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
