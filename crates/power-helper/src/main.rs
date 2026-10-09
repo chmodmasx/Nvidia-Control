@@ -12,7 +12,9 @@ struct NvmlPowerDevice<'a> {
 
 impl PowerDevice for NvmlPowerDevice<'_> {
     fn current_limit_mw(&mut self) -> Result<u32, String> {
-        self.device.power_management_limit().map_err(|e| e.to_string())
+        self.device
+            .power_management_limit()
+            .map_err(|e| e.to_string())
     }
 
     fn bounds(&mut self) -> Result<PowerBounds, String> {
@@ -53,7 +55,10 @@ struct Arguments {
 
 fn parse_arguments(arguments: &[String]) -> Result<Arguments, String> {
     if arguments.len() != 4 {
-        return Err("usage: nvidia-control-power-helper inspect|apply GPU-UUID EXPECTED_MW TARGET_MW".into());
+        return Err(
+            "usage: nvidia-control-power-helper inspect|apply GPU-UUID EXPECTED_MW TARGET_MW"
+                .into(),
+        );
     }
     let mode = match arguments[0].as_str() {
         "inspect" => Mode::Inspect,
@@ -61,8 +66,12 @@ fn parse_arguments(arguments: &[String]) -> Result<Arguments, String> {
         _ => return Err("only inspect and apply operations are permitted".into()),
     };
     let uuid = &arguments[1];
-    if uuid.len() < 5 || uuid.len() > 128 || !uuid.starts_with("GPU-")
-        || !uuid.bytes().all(|value| value.is_ascii_alphanumeric() || value == b'-')
+    if uuid.len() < 5
+        || uuid.len() > 128
+        || !uuid.starts_with("GPU-")
+        || !uuid
+            .bytes()
+            .all(|value| value.is_ascii_alphanumeric() || value == b'-')
     {
         return Err("invalid GPU UUID".into());
     }
@@ -73,7 +82,12 @@ fn parse_arguments(arguments: &[String]) -> Result<Arguments, String> {
     let requested_mw = arguments[3]
         .parse::<u32>()
         .map_err(|_| "requested power must be an unsigned integer in mW")?;
-    Ok(Arguments { mode, uuid: uuid.clone(), expected_mw, requested_mw })
+    Ok(Arguments {
+        mode,
+        uuid: uuid.clone(),
+        expected_mw,
+        requested_mw,
+    })
 }
 
 fn run(args: Arguments) -> Result<(), Box<dyn Error>> {
@@ -105,7 +119,10 @@ fn run(args: Arguments) -> Result<(), Box<dyn Error>> {
         ApplyOutcome::Unchanged { milliwatts } => {
             println!("UNCHANGED GPU={} power={}mW", args.uuid, milliwatts);
         }
-        ApplyOutcome::Applied { previous_mw, actual_mw } => {
+        ApplyOutcome::Applied {
+            previous_mw,
+            actual_mw,
+        } => {
             println!(
                 "APPLIED GPU={} previous={}mW readback={}mW",
                 args.uuid, previous_mw, actual_mw
@@ -143,14 +160,16 @@ mod tests {
 
     #[test]
     fn valid_inspect_does_not_require_hardware_to_parse() {
-        let parsed = parse_arguments(&args(&["inspect", "GPU-aaaa-bbbb", "350000", "250000"])).unwrap();
+        let parsed =
+            parse_arguments(&args(&["inspect", "GPU-aaaa-bbbb", "350000", "250000"])).unwrap();
         assert_eq!(parsed.mode, Mode::Inspect);
         assert_eq!(parsed.requested_mw, 250000);
     }
 
     #[test]
     fn valid_apply_can_be_parsed_but_not_executed_without_root() {
-        let parsed = parse_arguments(&args(&["apply", "GPU-aaaa-bbbb", "350000", "250000"])).unwrap();
+        let parsed =
+            parse_arguments(&args(&["apply", "GPU-aaaa-bbbb", "350000", "250000"])).unwrap();
         assert_eq!(parsed.mode, Mode::Apply);
     }
 
